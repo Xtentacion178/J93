@@ -1,0 +1,175 @@
+-- Function to create or get the existing ScreenGui
+local function getOrCreateScreenGui()
+    local playerGui = game.Players.LocalPlayer.PlayerGui
+    local existingGui = playerGui:FindFirstChild("MyScreenGui")
+
+    if not existingGui then
+        local gui = Instance.new("ScreenGui")
+        gui.Name = "MyScreenGui"
+        gui.ResetOnSpawn = false -- Ensure ScreenGui persists across respawns
+        gui.Parent = playerGui
+
+        -- Create a Frame for the draggable GUI
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(0, 200, 0, 150)
+        frame.Position = UDim2.new(0, 10, 0, 10)
+        frame.BackgroundColor3 = Color3.fromRGB(52, 73, 94)
+        frame.BackgroundTransparency = 0.5
+        frame.BorderSizePixel = 0
+        frame.Active = true
+        frame.Draggable = true
+        frame.Parent = gui
+
+        -- Create a TextLabel to display instructions
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Size = UDim2.new(1, 0, 0.33, 0)
+        textLabel.Position = UDim2.new(0, 0, 0, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.Text = "Move Gui"
+        textLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- Text color is white
+        textLabel.TextSize = 20
+        textLabel.Font = Enum.Font.SourceSansBold
+        textLabel.Parent = frame
+
+        -- Create a TextButton as the toggle button
+        local toggleButton = Instance.new("TextButton")
+        toggleButton.Size = UDim2.new(1, 0, 0.33, 0)
+        toggleButton.Position = UDim2.new(0, 0, 0.33, 0)
+        toggleButton.BackgroundColor3 = Color3.fromRGB(41, 128, 185)
+        toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- Text color is white
+        toggleButton.TextSize = 20
+        toggleButton.Font = Enum.Font.SourceSansBold
+        toggleButton.Text = "Toggle Jump"
+        toggleButton.Parent = frame
+
+        -- Create a TextBox to input jump delay
+        local jumpDelayBox = Instance.new("TextBox")
+        jumpDelayBox.Size = UDim2.new(1, 0, 0.33, 0)
+        jumpDelayBox.Position = UDim2.new(0, 0, 0.66, 0)
+        jumpDelayBox.BackgroundColor3 = Color3.fromRGB(44, 62, 80)
+        jumpDelayBox.TextColor3 = Color3.fromRGB(255, 255, 255) -- Text color is white
+        jumpDelayBox.TextSize = 20
+        jumpDelayBox.Font = Enum.Font.SourceSansBold
+        jumpDelayBox.PlaceholderText = "Enter Jump Delay (s)"
+        jumpDelayBox.PlaceholderColor3 = Color3.fromRGB(149, 165, 166)
+        jumpDelayBox.Text = ""
+        jumpDelayBox.Parent = frame
+
+        -- Create a TextButton as the close button (X)
+        local closeButton = Instance.new("TextButton")
+        closeButton.Size = UDim2.new(0, 30, 0, 30)
+        closeButton.Position = UDim2.new(1, -40, 0, 10)
+        closeButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
+        closeButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- Text color is white
+        closeButton.TextSize = 20
+        closeButton.Font = Enum.Font.SourceSansBold
+        closeButton.Text = "X"
+        closeButton.Parent = frame
+
+        -- Variables for jump functionality
+        local isJumping = false
+        local jumpDelay = 5 -- Default jump delay (in seconds)
+        local lastValidDelay = jumpDelay -- Store the last valid delay
+
+        -- Function to make the character jump
+        local function jump()
+            while isJumping do
+                local character = game.Players.LocalPlayer.Character
+                local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+                wait(jumpDelay)
+            end
+        end
+
+        -- Event to toggle jump on button click
+        toggleButton.MouseButton1Click:Connect(function()
+            isJumping = not isJumping
+            if isJumping then
+                toggleButton.Text = "Stop Jump"
+                toggleButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
+                spawn(jump)
+            else
+                toggleButton.Text = "Toggle Jump"
+                toggleButton.BackgroundColor3 = Color3.fromRGB(41, 128, 185)
+            end
+        end)
+
+        -- Event to change jump delay based on TextBox input
+        jumpDelayBox.FocusLost:Connect(function(enterPressed)
+            if enterPressed then
+                local newDelay = tonumber(jumpDelayBox.Text)
+                if newDelay and newDelay > 0 then
+                    jumpDelay = newDelay
+                    lastValidDelay = newDelay -- Update last valid delay
+                else
+                    -- Restore last valid delay if the new input is invalid
+                    jumpDelayBox.Text = tostring(lastValidDelay)
+                end
+            end
+        end)
+
+        -- Event to close the GUI when the close button (X) is clicked
+        closeButton.MouseButton1Click:Connect(function()
+            gui:Destroy() -- Remove the ScreenGui
+        end)
+
+        -- Rainbow effect for all GUI backgrounds
+        local function updateRainbowColor()
+            local time = tick()
+            local color = Color3.fromHSV(time % 5 / 5, 1, 1)
+            frame.BackgroundColor3 = color
+            toggleButton.BackgroundColor3 = color
+            jumpDelayBox.BackgroundColor3 = color
+        end
+
+        -- Run the rainbow effect continuously
+        game:GetService("RunService").RenderStepped:Connect(updateRainbowColor)
+
+        -- Display notification
+        local notification = Instance.new("ScreenGui")
+        notification.Name = "NotificationGui"
+        notification.Parent = playerGui
+
+        local notifFrame = Instance.new("Frame")
+        notifFrame.Size = UDim2.new(0, 300, 0, 100)
+        notifFrame.Position = UDim2.new(0.5, -150, 0.5, -50)
+        notifFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        notifFrame.BackgroundTransparency = 0.8
+        notifFrame.BorderSizePixel = 0
+        notifFrame.Parent = notification
+
+        local titleLabel = Instance.new("TextLabel")
+        titleLabel.Size = UDim2.new(1, 0, 0.5, 0)
+        titleLabel.Position = UDim2.new(0, 0, 0, 0)
+        titleLabel.BackgroundTransparency = 1
+        titleLabel.Text = "Jump gui script loaded!"
+        titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- Text color is white
+        titleLabel.TextSize = 20
+        titleLabel.Font = Enum.Font.SourceSansBold
+        titleLabel.TextStrokeTransparency = 0.5
+        titleLabel.Parent = notifFrame
+
+        local descLabel = Instance.new("TextLabel")
+        descLabel.Size = UDim2.new(1, 0, 0.5, 0)
+        descLabel.Position = UDim2.new(0, 0, 0.5, 0)
+        descLabel.BackgroundTransparency = 1
+        descLabel.Text = "made by: GoiabaScript"
+        descLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- Text color is white
+        descLabel.TextSize = 16
+        descLabel.Font = Enum.Font.SourceSans
+        descLabel.TextStrokeTransparency = 0.5
+        descLabel.Parent = notifFrame
+
+        -- Remove notification after 5 seconds
+        wait(5)
+        notification:Destroy()
+    end
+end
+
+-- Create or retrieve the ScreenGui when the player joins or respawns
+game.Players.LocalPlayer.CharacterAdded:Connect(getOrCreateScreenGui)
+if game.Players.LocalPlayer.Character then
+    getOrCreateScreenGui()
+end
